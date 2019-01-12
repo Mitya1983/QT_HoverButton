@@ -3,20 +3,30 @@
 
 #include "hoverbutton.h"
 
-HoverButton::HoverButton(QWidget *parent)
-    : QPushButton (parent)
+HoverButton::HoverButton(QWidget *parent):
+    QPushButton (parent),
+    baseColor (parent == nullptr ? QColor(255, 255, 255, 255) : parent->palette().button().color()),
+    hoverColor (baseColor.darker(125)),
+    pressedColor (baseColor.darker(300)),
+    pressedTextColor (baseColor)
+
 {
     mainSetup();
     setBaseColor();
+    connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
 }
 
 HoverButton::HoverButton(QColor _baseColor, QColor _hoverColor, QWidget *parent) :
     QPushButton (parent),
     baseColor(std::move(_baseColor)),
-    hoverColor (std::move(_hoverColor))
+    hoverColor (std::move(_hoverColor)),
+    pressedColor(baseColor.darker(300)),
+    pressedTextColor(baseColor)
+
 {
     mainSetup();
     setBaseColor();
+    connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
 }
 
 HoverButton::HoverButton(QColor _baseColor, QColor _hoverColor, QColor _pressedColor, QColor _pressedTextColor, QWidget *parent):
@@ -28,7 +38,7 @@ HoverButton::HoverButton(QColor _baseColor, QColor _hoverColor, QColor _pressedC
 {
     mainSetup();
     setBaseColor();
-    qDebug() << initialTextColor;
+    connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
 }
 
 void HoverButton::mainSetup()
@@ -36,12 +46,15 @@ void HoverButton::mainSetup()
     setAutoFillBackground(true);
     setFlat(true);
     setMouseTracking(true);
+    setTabletTracking(true);
 }
 
 void HoverButton::setBaseColor()
 {
     QPalette pal = palette();
     pal.setColor(QPalette::Button, baseColor);
+    if (initialTextColor != QColor("Invalid"))
+        pal.setColor(QPalette::ButtonText, initialTextColor);
     setPalette(pal);
 }
 
@@ -63,14 +76,24 @@ void HoverButton::setPressedColor()
 
 void HoverButton::enterEvent(QEvent *event)
 {
-    setHoverColor();
-    event->accept();
+    if (!isChecked())
+    {
+        setHoverColor();
+        event->accept();
+    }
+    else
+        event->ignore();
 }
 
 void HoverButton::leaveEvent(QEvent *event)
 {
-    setBaseColor();
-    event->accept();
+    if(!isChecked())
+    {
+        setBaseColor();
+        event->accept();
+    }
+    else
+        event->ignore();
 }
 
 void HoverButton::on_toggled(bool checked)
