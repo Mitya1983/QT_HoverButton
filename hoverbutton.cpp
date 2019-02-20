@@ -41,6 +41,19 @@ HoverButton::HoverButton(QColor _baseColor, QColor _hoverColor, QColor _pressedC
     connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
 }
 
+void HoverButton::setSquare(bool isSquare)
+{
+    square = isSquare;
+}
+
+void HoverButton::setBackgroundImage(const QString path)
+{
+    QString css = "background-image : url(";
+    css.append(path); css.append("); background-position : center center");
+    setStyleSheet(css);
+    image = true;
+}
+
 void HoverButton::mainSetup()
 {
     setAutoFillBackground(true);
@@ -76,7 +89,7 @@ void HoverButton::setPressedColor()
 
 void HoverButton::enterEvent(QEvent *event)
 {
-    if (!isChecked())
+    if (!isChecked() && !image)
     {
         setHoverColor();
         event->accept();
@@ -87,7 +100,7 @@ void HoverButton::enterEvent(QEvent *event)
 
 void HoverButton::leaveEvent(QEvent *event)
 {
-    if(!isChecked())
+    if(!isChecked() && !image)
     {
         setBaseColor();
         event->accept();
@@ -96,10 +109,22 @@ void HoverButton::leaveEvent(QEvent *event)
         event->ignore();
 }
 
+void HoverButton::resizeEvent(QResizeEvent *event)
+{
+    if (square)
+    {
+        setFixedHeight(width());
+        event->accept();
+    }
+    else {
+        event->ignore();
+    }
+}
+
 void HoverButton::on_toggled(bool checked)
 {
-    if (checked)
+    if (checked && !image)
         setPressedColor();
-    if (!checked)
+    if (!checked && !image)
         setBaseColor();
 }
