@@ -60,6 +60,7 @@ void HoverButton::mainSetup()
     setFlat(true);
     setMouseTracking(true);
     setTabletTracking(true);
+    setCursor(Qt::PointingHandCursor);
 }
 
 void HoverButton::setBaseColor()
