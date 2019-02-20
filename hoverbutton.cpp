@@ -49,7 +49,7 @@ void HoverButton::setSquare(bool isSquare)
 void HoverButton::setBackgroundImage(const QString path)
 {
     QString css = "background-image : url(";
-    css.append(path); css.append("); background-position : center center");
+    css.append(path); css.append("); background-size : cover; background-position : center center");
     setStyleSheet(css);
     image = true;
 }
