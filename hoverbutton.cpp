@@ -48,14 +48,22 @@ void HoverButton::setSquare(bool isSquare)
 
 void HoverButton::setBackgroundImage(const QString path)
 {
-    QString css = "background-image : url(";
-    css.append(path); css.append("); background-position : center center");
-    setStyleSheet(css);
+    background = new QPixmap(path);
+    mainLayout = new QGridLayout(this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    imageLabel = new QLabel(this);
+    imageLabel->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
+    imageLabel->setPixmap(QPixmap(background->scaledToHeight(height(), Qt::SmoothTransformation)));
+    mainLayout->addWidget(imageLabel);
+    setLayout(mainLayout);
     image = true;
 }
 
 void HoverButton::mainSetup()
 {
+    image = false;
+    square = false;
+    background = nullptr;
     setAutoFillBackground(true);
     setFlat(true);
     setMouseTracking(true);
@@ -88,6 +96,12 @@ void HoverButton::setPressedColor()
     setPalette(pal);
 }
 
+void HoverButton::resizeImage()
+{
+    QPixmap scaled = background->scaledToHeight(height(), Qt::SmoothTransformation);
+    imageLabel->setPixmap(scaled);
+}
+
 void HoverButton::enterEvent(QEvent *event)
 {
     if (!isChecked() && !image)
@@ -117,6 +131,11 @@ void HoverButton::resizeEvent(QResizeEvent *event)
         setFixedHeight(width());
         event->accept();
     }
+    if (image)
+    {
+        resizeImage();
+        event->accept();
+    }
     else {
         event->ignore();
     }
@@ -128,4 +147,10 @@ void HoverButton::on_toggled(bool checked)
         setPressedColor();
     if (!checked && !image)
         setBaseColor();
+}
+
+HoverButton::~HoverButton()
+{
+    if (background != nullptr)
+        delete background;
 }

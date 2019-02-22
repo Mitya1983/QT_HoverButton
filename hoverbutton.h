@@ -4,6 +4,9 @@
 #include <QPushButton>
 #include <QColor>
 #include <QEvent>
+#include <QPixmap>
+#include <QGridLayout>
+#include <QLabel>
 #include <QResizeEvent>
 
 class HoverButton : public QPushButton
@@ -11,7 +14,10 @@ class HoverButton : public QPushButton
     Q_OBJECT
 private: /*Members*/
     QColor baseColor, hoverColor, pressedColor, pressedTextColor, initialTextColor;
-    bool square = false, image = false;
+    bool square, image;
+    QPixmap *background;
+    QGridLayout *mainLayout;
+    QLabel *imageLabel;
 public: /*Methods*/
     /*If no colors is paased to constructor the background color will be either taken from parent background color either
       (if parent is nullptr) will be set to white, the hover, pressed and pressed text colors will be calculated on base of baclground color*/
@@ -30,13 +36,15 @@ private: /*Methods*/
     void setHoverColor();
     //Aplying pressed color
     void setPressedColor();
+    //Resising background image
+    void resizeImage();
     void enterEvent(QEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 private slots:
     void on_toggled(bool checked);
 public: /*Destructor*/
-    ~HoverButton() override = default;
+    ~HoverButton() override;
 };
 
 #endif // HOVERBUTTON_H
