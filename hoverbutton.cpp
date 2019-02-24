@@ -128,7 +128,10 @@ void HoverButton::resizeEvent(QResizeEvent *event)
 {
     if (square)
     {
-        setFixedHeight(width());
+        if (width() > height())
+            setFixedHeight(width());
+        if (width() < height())
+            setFixedWidth(height());
         event->accept();
     }
     if (image)
