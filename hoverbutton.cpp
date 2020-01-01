@@ -1,69 +1,12 @@
 #include <QPalette>
 #include <QDebug>
-
 #include "hoverbutton.h"
 
-HoverButton::HoverButton(QWidget *parent):
-    QPushButton (parent),
-    baseColor (parent == nullptr ? QColor(255, 255, 255, 255) : parent->palette().button().color()),
-    hoverColor (baseColor.darker(125)),
-    pressedColor (baseColor.darker(300)),
-    pressedTextColor (baseColor)
-
+void MT::HoverButton::_main_setup()
 {
-    mainSetup();
-    setBaseColor();
-    connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
-}
-
-HoverButton::HoverButton(QColor _baseColor, QColor _hoverColor, QWidget *parent) :
-    QPushButton (parent),
-    baseColor(std::move(_baseColor)),
-    hoverColor (std::move(_hoverColor)),
-    pressedColor(baseColor.darker(300)),
-    pressedTextColor(baseColor)
-
-{
-    mainSetup();
-    setBaseColor();
-    connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
-}
-
-HoverButton::HoverButton(QColor _baseColor, QColor _hoverColor, QColor _pressedColor, QColor _pressedTextColor, QWidget *parent):
-    QPushButton (parent),
-    baseColor(std::move(_baseColor)),
-    hoverColor(std::move(_hoverColor)),
-    pressedColor(std::move(_pressedColor)),
-    pressedTextColor(std::move(_pressedTextColor))
-{
-    mainSetup();
-    setBaseColor();
-    connect(this, &HoverButton::toggled, this, &HoverButton::on_toggled);
-}
-
-void HoverButton::setSquare(bool isSquare)
-{
-    square = isSquare;
-}
-
-void HoverButton::setBackgroundImage(const QString path)
-{
-    background = new QPixmap(path);
-    mainLayout = new QGridLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    imageLabel = new QLabel(this);
-    imageLabel->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
-    imageLabel->setPixmap(QPixmap(background->scaledToHeight(height(), Qt::SmoothTransformation)));
-    mainLayout->addWidget(imageLabel);
-    setLayout(mainLayout);
-    image = true;
-}
-
-void HoverButton::mainSetup()
-{
-    image = false;
-    square = false;
-    background = nullptr;
+    _background_image = false;
+    _is_square = false;
+    _background = nullptr;
     setAutoFillBackground(true);
     setFlat(true);
     setMouseTracking(true);
@@ -71,89 +14,205 @@ void HoverButton::mainSetup()
     setCursor(Qt::PointingHandCursor);
 }
 
-void HoverButton::setBaseColor()
+void MT::HoverButton::_set_base_color()
 {
     QPalette pal = palette();
-    pal.setColor(QPalette::Button, baseColor);
-    if (initialTextColor != QColor("Invalid"))
-        pal.setColor(QPalette::ButtonText, initialTextColor);
+    pal.setColor(QPalette::Button, _base_color);
+    if (_initial_text_color != QColor("Invalid")){
+        pal.setColor(QPalette::ButtonText, _initial_text_color);
+    }
     setPalette(pal);
 }
 
-void HoverButton::setHoverColor()
+void MT::HoverButton::_set_hover_color()
 {
     QPalette pal = palette();
-    pal.setColor(QPalette::Button, hoverColor);
+    pal.setColor(QPalette::Button, _hover_color);
+    if (_initial_text_color != QColor("Invalid")){
+        pal.setColor(QPalette::ButtonText, _initial_text_color);
+    }
     setPalette(pal);
 }
 
-void HoverButton::setPressedColor()
+void MT::HoverButton::_set_pressed_color()
 {
-    initialTextColor = palette().buttonText().color();
+    _initial_text_color = palette().buttonText().color();
     QPalette pal = palette();
-    pal.setColor(QPalette::Button, pressedColor);
-    pal.setColor(QPalette::ButtonText, pressedTextColor);
+    pal.setColor(QPalette::Button, _pressed_color);
+    pal.setColor(QPalette::ButtonText, _pressed_text_color);
     setPalette(pal);
 }
 
-void HoverButton::resizeImage()
+void MT::HoverButton::_resize_image()
 {
-    QPixmap scaled = background->scaledToHeight(height(), Qt::SmoothTransformation);
-    imageLabel->setPixmap(scaled);
+    QPixmap scaled = _background->scaledToHeight(height(), Qt::SmoothTransformation);
+    _image_label->setPixmap(scaled);
 }
 
-void HoverButton::enterEvent(QEvent *event)
+void MT::HoverButton::enterEvent(QEvent *event)
 {
-    if (!isChecked() && !image)
-    {
-        setHoverColor();
+    if (!isChecked() && !_background_image){
+        _set_hover_color();
         event->accept();
     }
-    else
+    else{
         event->ignore();
+    }
 }
 
-void HoverButton::leaveEvent(QEvent *event)
+void MT::HoverButton::leaveEvent(QEvent *event)
 {
-    if(!isChecked() && !image)
-    {
-        setBaseColor();
+    if(!isChecked() && !_background_image){
+        _set_base_color();
         event->accept();
     }
-    else
+    else{
         event->ignore();
+    }
 }
 
-void HoverButton::resizeEvent(QResizeEvent *event)
+void MT::HoverButton::resizeEvent(QResizeEvent *event)
 {
-    if (square)
-    {
+    if (_is_square){
         if (width() > height())
             setFixedHeight(width());
         if (width() < height())
             setFixedWidth(height());
         event->accept();
     }
-    if (image)
-    {
-        resizeImage();
+    if (_background_image){
+        _resize_image();
         event->accept();
     }
-    else {
+    else{
         event->ignore();
     }
 }
 
-void HoverButton::on_toggled(bool checked)
+void MT::HoverButton::on_toggled(bool checked)
 {
-    if (checked && !image)
-        setPressedColor();
-    if (!checked && !image)
-        setBaseColor();
+    if (checked && !_background_image){
+        _set_pressed_color();
+    }
+    if (!checked && !_background_image){
+        _set_hover_color();
+    }
 }
 
-HoverButton::~HoverButton()
+void MT::HoverButton::on_pressed()
 {
-    if (background != nullptr)
-        delete background;
+    _set_pressed_color();
+}
+
+void MT::HoverButton::on_released()
+{
+    if (!isCheckable()){
+        _set_base_color();
+    }
+}
+
+MT::HoverButton::HoverButton(QWidget *parent):
+    QPushButton(parent),
+    _base_color(parent == nullptr ? QColor(255, 255, 255, 255) : parent->palette().button().color()),
+    _hover_color(_base_color.darker(125)),
+    _pressed_color(_base_color.darker(300)),
+    _pressed_text_color(_base_color)
+
+{
+    _main_setup();
+    _set_base_color();
+    connect(this, &MT::HoverButton::toggled, this, &MT::HoverButton::on_toggled);
+    connect(this, &MT::HoverButton::pressed, this, &MT::HoverButton::on_pressed);
+    connect(this, &MT::HoverButton::released, this, &MT::HoverButton::on_released);
+}
+
+MT::HoverButton::HoverButton(QColor *base_color, QColor *hover_color, QWidget *parent) :
+    QPushButton(parent),
+    _base_color(std::move(*base_color)),
+    _hover_color(hover_color == nullptr ? _base_color.darker(125) : std::move(*hover_color)),
+    _pressed_color(_base_color.darker(300)),
+    _pressed_text_color(_base_color)
+
+{
+    _main_setup();
+    _set_base_color();
+    connect(this, &MT::HoverButton::toggled, this, &MT::HoverButton::on_toggled);
+    connect(this, &MT::HoverButton::pressed, this, &MT::HoverButton::on_pressed);
+    connect(this, &MT::HoverButton::released, this, &MT::HoverButton::on_released);
+}
+
+void MT::HoverButton::set_base_color(QColor color)
+{
+    _base_color = color;
+    _set_base_color();
+    _hover_color = _base_color.darker(125);
+    _pressed_color = _base_color.darker(300);
+}
+
+void MT::HoverButton::set_hover_color(QColor color)
+{
+    _hover_color = color;
+}
+
+void MT::HoverButton::set_pressed_color(QColor color)
+{
+    _pressed_color = color;
+}
+
+void MT::HoverButton::set_pressed_text_color(QColor color)
+{
+    _pressed_text_color = color;
+}
+
+void MT::HoverButton::set_initial_text_color(QColor color)
+{
+    _initial_text_color = color;
+}
+
+void MT::HoverButton::set_background_transparency(int transparency)
+{
+    _base_color.setAlpha(transparency);
+    _hover_color.setAlpha(transparency);
+    _pressed_color.setAlpha(transparency);
+    _set_base_color();
+}
+
+void MT::HoverButton::set_is_square(bool value)
+{
+    _is_square = value;
+}
+
+void MT::HoverButton::set_background_image(const QString &path)
+{
+    _background = new QPixmap(path);
+    _main_layout = new QVBoxLayout(this);
+    _main_layout->setContentsMargins(0, 0, 0, 0);
+    _image_label = new QLabel(this);
+    _image_label->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
+    _main_layout->addWidget(_image_label);
+    setLayout(_main_layout);
+    _image_label->setScaledContents(true);
+    _image_label->setPixmap(*_background);
+    _background_image = true;
+}
+
+void MT::HoverButton::set_background_image_text(const QString text)
+{
+    if (_main_layout != nullptr){
+        QLabel *image_text = new QLabel();
+        image_text->setAlignment(Qt::AlignCenter | Qt::AlignHCenter);
+        image_text->setText(text);
+        _main_layout->addWidget(image_text);
+        QFont font = image_text->font();
+        font.setBold(true);
+        font.setPointSize(_main_layout->parentWidget()->height()/10);
+        image_text->setFont(font);
+    }
+}
+
+MT::HoverButton::~HoverButton()
+{
+    if (_background != nullptr){
+        delete _background;
+    }
 }
