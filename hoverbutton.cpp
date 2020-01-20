@@ -1,4 +1,5 @@
 #include <QPalette>
+#include <QProcess>
 #include <QDebug>
 #include "hoverbutton.h"
 
@@ -18,9 +19,7 @@ void MT::HoverButton::_set_base_color()
 {
     QPalette pal = palette();
     pal.setColor(QPalette::Button, _base_color);
-    if (_initial_text_color != QColor("Invalid")){
-        pal.setColor(QPalette::ButtonText, _initial_text_color);
-    }
+    pal.setColor(QPalette::ButtonText, _initial_text_color);
     setPalette(pal);
 }
 
@@ -28,9 +27,9 @@ void MT::HoverButton::_set_hover_color()
 {
     QPalette pal = palette();
     pal.setColor(QPalette::Button, _hover_color);
-    if (_initial_text_color != QColor("Invalid")){
-        pal.setColor(QPalette::ButtonText, _initial_text_color);
-    }
+//    if (_initial_text_color != QColor("Invalid")){
+//        pal.setColor(QPalette::ButtonText, _initial_text_color);
+//    }
     setPalette(pal);
 }
 
@@ -49,9 +48,19 @@ void MT::HoverButton::_resize_image()
     _image_label->setPixmap(scaled);
 }
 
+void MT::HoverButton::_init_system_call()
+{
+    QProcess proc;
+    proc.nullDevice();
+    bool status = proc.startDetached(_system_call);
+    if (!status){
+        emit HoverButtonError("Unable to init command: " + _system_call + " - " + proc.errorString());
+    }
+}
+
 void MT::HoverButton::enterEvent(QEvent *event)
 {
-    if (!isChecked() && !_background_image){
+    if (!isChecked()){
         _set_hover_color();
         event->accept();
     }
@@ -62,7 +71,7 @@ void MT::HoverButton::enterEvent(QEvent *event)
 
 void MT::HoverButton::leaveEvent(QEvent *event)
 {
-    if(!isChecked() && !_background_image){
+    if(!isChecked()){
         _set_base_color();
         event->accept();
     }
@@ -116,6 +125,7 @@ MT::HoverButton::HoverButton(QWidget *parent):
     _base_color(parent == nullptr ? QColor(255, 255, 255, 255) : parent->palette().button().color()),
     _hover_color(_base_color.darker(125)),
     _pressed_color(_base_color.darker(300)),
+    _initial_text_color(QColor(255-_base_color.red(), 255-_base_color.green(), 255-_base_color.blue(), 255)),
     _pressed_text_color(_base_color)
 
 {
@@ -131,7 +141,8 @@ MT::HoverButton::HoverButton(QColor *base_color, QColor *hover_color, QWidget *p
     _base_color(std::move(*base_color)),
     _hover_color(hover_color == nullptr ? _base_color.darker(125) : std::move(*hover_color)),
     _pressed_color(_base_color.darker(300)),
-    _pressed_text_color(_base_color)
+    _initial_text_color(QColor(255-_base_color.red(), 255-_base_color.green(), 255-_base_color.blue(), 255)),
+    _pressed_text_color(QColor(255-_pressed_color.red(), 255-_pressed_color.green(), 255-_pressed_color.blue(), 255))
 
 {
     _main_setup();
@@ -147,6 +158,8 @@ void MT::HoverButton::set_base_color(QColor color)
     _set_base_color();
     _hover_color = _base_color.darker(125);
     _pressed_color = _base_color.darker(300);
+    _initial_text_color = QColor(255-_base_color.red(), 255-_base_color.green(), 255-_base_color.blue(), 255);
+    _pressed_text_color = QColor(255-_pressed_color.red(), 255-_pressed_color.green(), 255-_pressed_color.blue(), 255);
 }
 
 void MT::HoverButton::set_hover_color(QColor color)
@@ -157,6 +170,7 @@ void MT::HoverButton::set_hover_color(QColor color)
 void MT::HoverButton::set_pressed_color(QColor color)
 {
     _pressed_color = color;
+    _pressed_text_color = QColor(255-_pressed_color.red(), 255-_pressed_color.green(), 255-_pressed_color.blue(), 255);
 }
 
 void MT::HoverButton::set_pressed_text_color(QColor color)
@@ -208,6 +222,12 @@ void MT::HoverButton::set_background_image_text(const QString text)
         font.setPointSize(_main_layout->parentWidget()->height()/10);
         image_text->setFont(font);
     }
+}
+
+void MT::HoverButton::set_system_call(const QString command)
+{
+    _system_call = command;
+    connect(this, &MT::HoverButton::clicked, this, &MT::HoverButton::_init_system_call);
 }
 
 MT::HoverButton::~HoverButton()
