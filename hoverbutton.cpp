@@ -90,6 +90,8 @@ void MT::HoverButton::resizeEvent(QResizeEvent *event)
         event->accept();
     }
     if (_background_image){
+        int margin = (width() - height()) / 2;
+        _main_layout->setContentsMargins(margin, 0, margin, 0);
         _resize_image();
         event->accept();
     }
@@ -116,7 +118,7 @@ void MT::HoverButton::on_pressed()
 void MT::HoverButton::on_released()
 {
     if (!isCheckable()){
-        _set_base_color();
+        _set_hover_color();
     }
 }
 
